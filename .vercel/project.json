@@ -1,0 +1,16 @@
+{
+  "projectId": "prj_lXKQfMR0IaTWkjo1GXsDHWr8hTds",
+  "orgId": "team_XzS3YTrPnlIS33QziaiTwiO2",
+  "projectName": "britium-express-delivery",
+  "settings": {
+    "createdAt": 1769542195971,
+    "framework": "vite",
+    "devCommand": null,
+    "installCommand": null,
+    "buildCommand": null,
+    "outputDirectory": null,
+    "rootDirectory": null,
+    "directoryListing": false,
+    "nodeVersion": "24.x"
+  }
+}

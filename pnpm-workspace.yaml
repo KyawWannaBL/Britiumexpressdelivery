@@ -1,0 +1,4 @@
+# Create the workspace configuration file
+touch pnpm-workspace.yaml
+# pnpm-workspace.yaml
+packages:- 'apps/*'- 'packages/*'
