@@ -1,22 +1,43 @@
 // src/firebaseconfig.ts
-import { initializeApp, getApp, getApps } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
+import { initializeApp, getApp, getApps, type FirebaseApp } from "firebase/app";
+import { getAuth, type Auth } from "firebase/auth";
+import { getFirestore, type Firestore } from "firebase/firestore";
+import { getStorage, type FirebaseStorage } from "firebase/storage";
+import { getAnalytics, isSupported, type Analytics } from "firebase/analytics";
+
+type Env = Record<string, string | undefined>;
+
+function requireEnv(name: string): string {
+  const env = import.meta.env as unknown as Env;
+  const value = env[name];
+  if (!value) throw new Error(`Missing required env var: ${name}`);
+  return value;
+}
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  // measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID, // only if using Analytics
+  apiKey: requireEnv("VITE_FIREBASE_API_KEY"),
+  authDomain: requireEnv("VITE_FIREBASE_AUTH_DOMAIN"),
+  projectId: requireEnv("VITE_FIREBASE_PROJECT_ID"),
+  storageBucket: requireEnv("VITE_FIREBASE_STORAGE_BUCKET"),
+  messagingSenderId: requireEnv("VITE_FIREBASE_MESSAGING_SENDER_ID"),
+  appId: requireEnv("VITE_FIREBASE_APP_ID"),
+  measurementId: (import.meta.env as unknown as Env).VITE_FIREBASE_MEASUREMENT_ID,
 };
 
-// Prevent re-initializing in dev/hot-reload
-export const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+export const app: FirebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export const storage = getStorage(app);
+export const auth: Auth = getAuth(app);
+export const db: Firestore = getFirestore(app);
+export const storage: FirebaseStorage = getStorage(app);
+
+// Optional Analytics (safe on web only)
+export let analytics: Analytics | null = null;
+if (firebaseConfig.measurementId) {
+  isSupported()
+    .then((ok) => {
+      if (ok) analytics = getAnalytics(app);
+    })
+    .catch(() => {
+      analytics = null;
+    });
+}

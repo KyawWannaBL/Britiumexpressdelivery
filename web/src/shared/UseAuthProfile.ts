@@ -1,8 +1,10 @@
-import React from "react";
-import { onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
-import { auth, db } from "../firebaseconfig";
-
+// src/shared/useAuthProfile.ts
+import * as React from "react";
+import type { User } from "firebase/auth";
+import { onAuthStateChanged } from "firebase/auth";
+import { doc, onSnapshot } from "firebase/firestore";
+import { auth, db } from "@/firebaseconfig";
+import { useAuthProfile } from "@/shared/useAuthProfile";
 export type Role =
   | "super_admin"
   | "manager"
@@ -13,43 +15,71 @@ export type Role =
   | "merchant"
   | "vendor"
   | "customer"
-  | "accountant"
-  | string;
+  | "accountant";
 
 export type UserProfile = {
   role?: Role;
   stationId?: string;
   stationName?: string;
   displayName?: string;
-  phone?: string;
-  active?: boolean;
+  email?: string;
 };
 
-export function useAuthProfile() {
-  const [user, setUser] = React.useState<FirebaseUser | null>(null);
+export function useAuthProfile(): {
+  user: User | null;
+  profile: UserProfile | null;
+  loading: boolean;
+} {
+  const [user, setUser] = React.useState<User | null>(null);
   const [profile, setProfile] = React.useState<UserProfile | null>(null);
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (u) => {
+    const unsubAuth = onAuthStateChanged(auth, (u) => {
       setUser(u);
-      setProfile(null);
+      setLoading(true);
 
+      // Reset profile immediately on logout
       if (!u) {
+        setProfile(null);
         setLoading(false);
         return;
       }
 
-      setLoading(true);
-      try {
-        const snap = await getDoc(doc(db, "users", u.uid));
-        setProfile((snap.data() as UserProfile) ?? null);
-      } finally {
-        setLoading(false);
-      }
+      // Assumption: your user profile doc is stored at: users/{uid}
+      const ref = doc(db, "users", u.uid);
+
+      const unsubProfile = onSnapshot(
+        ref,
+        (snap) => {
+          if (snap.exists()) {
+            setProfile(snap.data() as UserProfile);
+          } else {
+            // If no profile doc exists yet, keep a safe default
+            setProfile({
+              role: "customer",
+              displayName: u.displayName ?? undefined,
+              email: u.email ?? undefined,
+            });
+          }
+          setLoading(false);
+        },
+        () => {
+          // If Firestore read fails, still allow app to continue
+          setProfile({
+            role: "customer",
+            displayName: u.displayName ?? undefined,
+            email: u.email ?? undefined,
+          });
+          setLoading(false);
+        }
+      );
+
+      // cleanup profile listener when auth changes
+      return () => unsubProfile();
     });
 
-    return () => unsub();
+    return () => unsubAuth();
   }, []);
 
   return { user, profile, loading };
