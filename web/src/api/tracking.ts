@@ -1,38 +1,12 @@
-// src/api/tracking.ts
 import { api, toApiErrorMessage } from "./client";
 
-export type TrackingEventType =
-  | "order_created"
-  | "confirmed"
-  | "driver_assigned"
-  | "picked_up"
-  | "in_transit"
-  | "arrived"
-  | "delivered"
-  | "cancelled";
-
-export interface LatLng {
-  lat: number;
-  lng: number;
-}
-
+export interface LatLng { lat: number; lng: number; }
 export interface TrackingEvent {
   id: string;
   orderId: string;
-  type: TrackingEventType;
-  message?: string;
+  type: string;
   location?: LatLng;
-  createdAt: string; // ISO
-}
-
-export interface DriverLocation {
-  orderId: string;
-  driverId: string;
-  location: LatLng;
-  heading?: number;
-  speed?: number;
-  accuracy?: number;
-  recordedAt: string; // ISO
+  createdAt: string;
 }
 
 export async function getTrackingTimeline(orderId: string): Promise<TrackingEvent[]> {
@@ -44,27 +18,9 @@ export async function getTrackingTimeline(orderId: string): Promise<TrackingEven
   }
 }
 
-export async function addTrackingEvent(orderId: string, event: Omit<TrackingEvent, "id" | "createdAt">) {
+export async function updateDriverLocation(orderId: string, location: LatLng): Promise<void> {
   try {
-    const res = await api.post<TrackingEvent>(`/orders/${orderId}/tracking`, event);
-    return res.data;
-  } catch (err) {
-    throw new Error(toApiErrorMessage(err));
-  }
-}
-
-export async function updateDriverLocation(payload: Omit<DriverLocation, "recordedAt">): Promise<void> {
-  try {
-    await api.post(`/orders/${payload.orderId}/driver-location`, payload);
-  } catch (err) {
-    throw new Error(toApiErrorMessage(err));
-  }
-}
-
-export async function getLatestDriverLocation(orderId: string): Promise<DriverLocation | null> {
-  try {
-    const res = await api.get<DriverLocation | null>(`/orders/${orderId}/driver-location/latest`);
-    return res.data;
+    await api.post(`/orders/${orderId}/driver-location`, { location });
   } catch (err) {
     throw new Error(toApiErrorMessage(err));
   }

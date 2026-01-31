@@ -1,19 +1,16 @@
-// src/api/client.ts
 import axios, { AxiosError } from "axios";
 
 function getBaseUrl(): string {
-  // Vite (web)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const viteEnv = (import.meta as any)?.env;
   const fromVite = viteEnv?.VITE_API_BASE_URL as string | undefined;
 
-  // Node / some RN setups (if you use a env library)
   const fromProcess = (typeof process !== "undefined"
     ? (process.env.API_BASE_URL as string | undefined)
     : undefined);
 
-  const base = fromVite || fromProcess || "http://localhost:3000/api";
-  return base.replace(/\/+$/, ""); // trim trailing slashes
+  // Defaulting to the production path seen in your console logs to prevent 404s
+  const base = fromVite || fromProcess || "https://cdp.vercel.com/api/v1/projects/britium-ventures-website";
+  return base.replace(/\/+$/, ""); 
 }
 
 export const api = axios.create({
@@ -22,7 +19,6 @@ export const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-// If you use auth tokens, set them once here:
 export function setAuthToken(token: string | null) {
   if (token) api.defaults.headers.common.Authorization = `Bearer ${token}`;
   else delete api.defaults.headers.common.Authorization;

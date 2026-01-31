@@ -1,4 +1,3 @@
-// src/api/auth.ts
 import { api, setAuthToken, toApiErrorMessage } from "./client";
 
 export interface AuthUser {
@@ -11,7 +10,7 @@ export interface AuthUser {
 export interface AuthTokens {
   accessToken: string;
   refreshToken?: string;
-  expiresIn?: number; // seconds
+  expiresIn?: number; 
 }
 
 export interface AuthResponse {
@@ -19,16 +18,8 @@ export interface AuthResponse {
   tokens: AuthTokens;
 }
 
-export interface LoginRequest {
-  email: string;
-  password: string;
-}
-
-export interface RegisterRequest {
-  name: string;
-  email: string;
-  password: string;
-}
+export interface LoginRequest { email: string; password: string; }
+export interface RegisterRequest { name: string; email: string; password: string; }
 
 export async function login(payload: LoginRequest): Promise<AuthResponse> {
   try {
@@ -64,7 +55,7 @@ export async function logout(): Promise<void> {
   try {
     await api.post("/auth/logout");
   } catch (err) {
-    // logout failures shouldn't block UI; still clear local token
+    // Silently fail
   } finally {
     setAuthToken(null);
   }
