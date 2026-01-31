@@ -1,5 +1,5 @@
 import * as React from "react";
-// Change from "../shared/useAuthProfile" to the alias
+// Use the @ alias instead of ../
 import { useAuthProfile } from "@/shared/useAuthProfile"; 
 
 const AuthContext = React.createContext<ReturnType<typeof useAuthProfile> | null>(null);
