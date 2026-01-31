@@ -1,10 +1,10 @@
-// src/shared/useAuthProfile.ts
 import * as React from "react";
 import type { User } from "firebase/auth";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, onSnapshot } from "firebase/firestore";
-import { auth, db } from "@/firebaseconfig";
-import { useAuthProfile } from "@/shared/useAuthProfile";
+// Verify '@/' is correctly mapped in your vite.config.ts / tsconfig.json
+import { auth, db } from "@/firebaseconfig"; 
+
 export type Role =
   | "super_admin"
   | "manager"
@@ -37,8 +37,7 @@ export function useAuthProfile(): {
   React.useEffect(() => {
     const unsubAuth = onAuthStateChanged(auth, (u) => {
       setUser(u);
-      setLoading(true);
-
+      
       // Reset profile immediately on logout
       if (!u) {
         setProfile(null);
@@ -46,16 +45,16 @@ export function useAuthProfile(): {
         return;
       }
 
-      // Assumption: your user profile doc is stored at: users/{uid}
-      const ref = doc(db, "users", u.uid);
+      setLoading(true);
 
+      // Listener for Firestore user document
+      const ref = doc(db, "users", u.uid);
       const unsubProfile = onSnapshot(
         ref,
         (snap) => {
           if (snap.exists()) {
             setProfile(snap.data() as UserProfile);
           } else {
-            // If no profile doc exists yet, keep a safe default
             setProfile({
               role: "customer",
               displayName: u.displayName ?? undefined,
@@ -64,8 +63,8 @@ export function useAuthProfile(): {
           }
           setLoading(false);
         },
-        () => {
-          // If Firestore read fails, still allow app to continue
+        (error) => {
+          console.error("Profile fetch error:", error);
           setProfile({
             role: "customer",
             displayName: u.displayName ?? undefined,
@@ -75,7 +74,6 @@ export function useAuthProfile(): {
         }
       );
 
-      // cleanup profile listener when auth changes
       return () => unsubProfile();
     });
 

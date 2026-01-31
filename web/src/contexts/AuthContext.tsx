@@ -1,5 +1,8 @@
 import * as React from "react";
-import { useAuthProfile } from "../shared/useAuthProfile";
+// Change this:
+// import { useAuthProfile } from "../shared/useAuthProfile";
+// To this:
+import { useAuthProfile } from "@/shared/useAuthProfile";
 
 const AuthContext = React.createContext<ReturnType<typeof useAuthProfile> | null>(null);
 
